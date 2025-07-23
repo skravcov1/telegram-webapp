@@ -4,6 +4,7 @@
     <title>Magic Telegram WebApp</title>
     <meta charset="utf-8" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
       body {
         font-family: sans-serif;
@@ -16,9 +17,11 @@
   <body>
     <h2 id="hello">Привет!</h2>
     <p>Нажми кнопку ниже, чтобы начать магию ✨</p>
+
     <script>
       const tg = window.Telegram.WebApp;
       tg.expand();
+
       const user = tg.initDataUnsafe?.user;
       document.getElementById("hello").innerText =
         "Привет, " + (user?.first_name || "гость") + "!";
@@ -27,8 +30,20 @@
       tg.MainButton.show();
 
       tg.MainButton.onClick(() => {
-        tg.sendData("Магия активирована ✨");
-        tg.close();
+        // 🎉 Запуск салюта
+        confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.6 },
+        });
+
+        // Отправка данных в бота
+        tg.sendData("🎇 Магия активирована!");
+
+        // Закрыть WebApp через 2 секунды
+        setTimeout(() => {
+          tg.close();
+        }, 2000);
       });
     </script>
   </body>
