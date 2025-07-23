@@ -1,50 +1,167 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Magic Telegram WebApp</title>
-    <meta charset="utf-8" />
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-      body {
-        font-family: sans-serif;
-        text-align: center;
-        margin-top: 50px;
-        background: #f9f9f9;
-      }
-    </style>
-  </head>
-  <body>
-    <h2 id="hello">Привет!</h2>
-    <p>Нажми кнопку ниже, чтобы начать магию ✨</p>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>АнтиШкола | Колесо Фортуни</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(#eef2fa, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
 
-    <script>
-      const tg = window.Telegram.WebApp;
-      tg.expand();
+    #wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
 
-      const user = tg.initDataUnsafe?.user;
-      document.getElementById("hello").innerText =
-        "Привет, " + (user?.first_name || "гость") + "!";
+    #wheel {
+      width: 100%;
+      height: 100%;
+      transition: transform 5s ease-out;
+    }
 
-      tg.MainButton.setText("Запустить магию");
-      tg.MainButton.show();
+    #spin-btn {
+      margin-top: 30px;
+      padding: 15px 25px;
+      font-size: 18px;
+      color: white;
+      background: #007bff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+    }
 
-      tg.MainButton.onClick(() => {
-        // 🎉 Запуск салюта
-        confetti({
-          particleCount: 200,
-          spread: 100,
-          origin: { y: 0.6 },
+    #prize-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      text-align: center;
+      z-index: 100;
+    }
+
+    #prize-modal button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #005eff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
+    #confetti {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 999;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="wheel-container">
+    <img id="wheel" src="https://i.ibb.co/SN8ZTRH/wheel.png" alt="Wheel">
+  </div>
+  <button id="spin-btn">ВЗЯТИ УЧАСТЬ</button>
+
+  <div id="prize-modal">
+    <h2>Вітаємо!</h2>
+    <p id="prize-text"></p>
+    <button id="collect-btn">ЗАБРАТИ ПОДАРУНОК</button>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <script>
+    const prizes = [
+      'iPhone 16 Pro',
+      'MacBook',
+      'AirPods',
+      '12 уроків англійської безкоштовно',
+      'Безкоштовний розмовний клуб',
+      '12 уроків'
+    ];
+
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spin-btn');
+    const modal = document.getElementById('prize-modal');
+    const prizeText = document.getElementById('prize-text');
+    const collectBtn = document.getElementById('collect-btn');
+
+    let isSpinning = false;
+
+    spinBtn.onclick = () => {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      const angle = 360 * 5 + (prizeIndex * 60);
+
+      wheel.style.transform = `rotate(${angle}deg)`;
+
+      setTimeout(() => {
+        modal.style.display = 'block';
+        prizeText.innerText = `Ви виграли ${prizes[prizeIndex]}!`;
+        isSpinning = false;
+      }, 5200);
+    };
+
+    collectBtn.onclick = () => {
+      modal.innerHTML = '<h2>Успішно зареєстровано ✨</h2>';
+      startConfetti();
+    };
+
+    // Простейшая анимация конфетти
+    function startConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const confetti = Array.from({length: 200}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 20 + 10,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.random() * 10 - 10
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(c => {
+          ctx.beginPath();
+          ctx.fillStyle = c.color;
+          ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+          ctx.fill();
         });
+        update();
+      }
 
-        // Отправка данных в бота
-        tg.sendData("🎇 Магия активирована!");
+      function update() {
+        confetti.forEach(c => {
+          c.y += Math.cos(c.d / 10) + 1 + c.r / 2;
+          c.x += Math.sin(c.d / 10);
+          if (c.y > canvas.height) c.y = -10;
+        });
+      }
 
-        // Закрыть WebApp через 2 секунды
-        setTimeout(() => {
-          tg.close();
-        }, 2000);
-      });
-    </script>
-  </body>
+      setInterval(draw, 30);
+    }
+  </script>
+</body>
 </html>
